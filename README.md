@@ -9,5 +9,5 @@
 Download android apk with the link above.  
 Link Expires at Oct 29, 2020 3:41 PM
 
-###For IOS Devices
+### For IOS Devices
 No build has published yet for ios devices if you want one please contact me.
