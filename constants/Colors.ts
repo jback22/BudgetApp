@@ -12,11 +12,11 @@ export default {
     tabIconSelected: tintColorLight,
   },
   dark: {
-    text: '#fff',
-    background: '#000',
+    text: '#000',
+    background: '#fff',
     tint: tintColorLight,
-    tintActive:tintColorDark,
+    tintActive:tintColorActive,
     tabIconDefault: '#ccc',
-    tabIconSelected: tintColorDark,
+    tabIconSelected: tintColorLight,
   },
 };

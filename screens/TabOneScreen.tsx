@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import {
     Alert,
     SafeAreaView,
@@ -6,263 +6,323 @@ import {
     StyleSheet,
     TextInput,
     TouchableOpacity,
-} from 'react-native';
-import {LinearGradient} from 'expo-linear-gradient';
-import {View, Text} from '../components/Themed';
-import {Ionicons, FontAwesome5} from "@expo/vector-icons";
+    Keyboard,
+    Button,
+} from "react-native";
+import {LinearGradient} from "expo-linear-gradient";
+import {View, Text} from "../components/Themed";
+import {Ionicons, FontAwesome5, AntDesign} from "@expo/vector-icons";
 import {useEffect, useState} from "react";
 import DraggableFlatList from "react-native-draggable-flatlist";
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from "@react-native-community/async-storage";
 import useColorScheme from "../hooks/useColorScheme";
+import DatePicker from "react-native-datepicker";
+import RNPickerSelect from 'react-native-picker-select';
+import {SwipeListView} from 'react-native-swipe-list-view';
+import {useNavigation} from "@react-navigation/native";
+import {useTranslation} from "react-i18next";
+
 
 
 export default function TabOneScreen() {
     const theme = useColorScheme();
+    const navigation = useNavigation();
+    const { t } = useTranslation();
 
-    const [incomeName, setIncomeName] = useState('');
-    const [incomeAmount, setIncomeAmount] = useState('');
-    const [incomeList, setIncomeList] = useState<{ incomes: { incomeName: string; incomeAmount: string; id: number; }[]; }>({incomes: []});
-    const [total, setTotal] = useState(0)
+    const [incomeList, setIncomeList] = useState<{
+        incomes: { incomeName: string; incomeAmount: string; period: number; date: string; id: string }[];
+    }>({incomes: []});
+    const [total, setTotal] = useState(0);
+
+    useEffect(() => {
+        navigation.addListener('focus', () => {
+            // Screen was focused
+            _retrieveData();
+            console.log('income');
+        });
+    }, [navigation]);
+
     useEffect(() => {
         _retrieveData();
-    }, [])
+    }, []);
     useEffect(() => {
         calculateTotalAmount();
-        _storeData();
-
     }, [incomeList]);
-
-    const handleIncomeList = () => {
-        if (!incomeName || !incomeAmount) return;
-        const arr = {incomeName: incomeName, incomeAmount: incomeAmount, id: incomeList.incomes.length + 1};
-        const list = {incomes: [...incomeList.incomes, arr]};
-        setIncomeList(list);
-        setIncomeName('');
-        setIncomeAmount('')
-    };
-    const _storeData = async () => {
-        try {
-            const jsonValue = JSON.stringify(incomeList);
-
-            await AsyncStorage.setItem(
-                '@Uincomes',
-                jsonValue
-            );
-        } catch (error) {
-            console.dir(error)
-        }
-    };
+    useEffect(() => {
+        _storeTotalIncome();
+    }, [total]);
 
     const _retrieveData = async () => {
         try {
-            const jsonValue = await AsyncStorage.getItem('@Uincomes');
+            const jsonValue = await AsyncStorage.getItem("@Uincomes");
             if (!jsonValue) return;
-            setIncomeList(JSON.parse(jsonValue))
-
+            setIncomeList(JSON.parse(jsonValue));
         } catch (error) {
-            console.dir(error)
+            console.dir(error);
         }
     };
-    const handleDeleteIncome = (id: number) => {
-        /* comment */
-        const list = incomeList.incomes.filter(item => item.id !== id);
-        console.log(list);
-        setIncomeList({incomes: list})
+    const _storeData = async (list:any) => {
+        try {
+            const jsonValue = JSON.stringify(list);
+
+            await AsyncStorage.setItem("@Uincomes", jsonValue);
+        } catch (error) {
+            console.dir(error);
+        }
     };
+    const handleDeleteIncome = async (id: string) => {
+        /* comment */
+        const list = incomeList.incomes.filter((item) => item.id !== id);
+        await _storeData({incomes: list});
+        await _retrieveData();
+    };
+    const _storeTotalIncome = async ()=>{
+        try {
+            await AsyncStorage.setItem("@totalIncome", total.toString());
+        } catch (error) {
+            console.dir(error);
+        }
+    }
     const calculateTotalAmount = () => {
         if (!incomeList.incomes) return;
         /* comment */
         let total = 0;
         incomeList.incomes.forEach((item) => {
-            total += parseInt(item.incomeAmount)
+            total += parseFloat(item.incomeAmount);
         });
-        setTotal(total)
+        setTotal(total);
     };
 
-    const renderItem = ({item, index, drag, isActive}: any) => {
-        return (
-            <TouchableOpacity
-                onPressIn={drag}
-                onLongPress={() => Alert.alert(
-                    "Gelir silinecek!",
-                    "",
-                    [
-                        {
-                            text: "İptal",
-                            style: "cancel"
-                        },
-                        {text: "Sil", onPress: () => handleDeleteIncome(item.id)}
-                    ],
-                    {cancelable: false}
-                )}
-            >
-                <View style={styles.listView}>
-                    <View style={styles.awesomeIcon}>
-                        <FontAwesomeIconView name={"money-check-alt"} color={'#85bb65'} sizeN={40}/>
-                    </View>
-                    <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginLeft: 20,
-                        backgroundColor: 'transparent'
-                    }}>
-                        <Text style={styles.listText}>{item.incomeName}</Text>
-                        <Text> = </Text>
-                        <Text style={styles.listText}>{item.incomeAmount} ₺</Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
-
-        );
-    };
     return (
         <SafeAreaView style={styles.container}>
-            <View style={{
-                flexDirection: 'row',
-                justifyContent: 'space-around',
-                alignItems: 'center',
-                backgroundColor: 'transparent',
-                marginHorizontal:15,
-                marginTop:20
-            }}>
-                <View style={styles.textInputView}>
-                    <TextInput style={{height: '100%', paddingLeft: 8,color:`${theme === "light" ? '#000':'#fff'}`}}
-                               onChangeText={text => setIncomeName(text)}
-                               value={incomeName}
-                               clearTextOnFocus={false}
-                               keyboardType={"default"}
-                               placeholder={"Gelir tanımı"}/>
 
-                </View>
-                <View style={styles.textInputView}>
-                    <TextInput style={{height: '100%', paddingLeft: 8,color:`${theme === "light" ? '#000':'#fff'}`}}
-                               onChangeText={text => setIncomeAmount(text)}
-                               value={incomeAmount}
-                               clearTextOnFocus={false}
-                               keyboardType={"number-pad"}
-                               placeholder={"Gelir miktarı"}/>
-
-                </View>
-                <View style={{
-                    backgroundColor: '#00CD00',
-                    width: 30,
-                    height: 30,
-                    margin: 5,
-                    borderRadius: 10,
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}>
-                    <TouchableOpacity onPress={handleIncomeList}>
-                        <IconView color="white" name="ios-add" sizeN={30}/>
-                    </TouchableOpacity>
-                </View>
+            <View style={{backgroundColor:'transparent',alignItems:'flex-end',padding:20,}}>
+                <Text style={{fontSize:20}}>{t('Total')}: {total.toFixed(2)} ₺</Text>
             </View>
-            <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)"/>
+            <View
+                style={styles.separator}
+                lightColor="#eee"
+                darkColor="rgba(255,255,255,0.1)"
+            />
 
-            <ScrollView>
-                <View style={styles.draggableList}>
+            <View style={styles.draggableList}>
+                <SwipeListView
+                    data={incomeList.incomes}
+                    renderItem={(data, rowMap) => (
+                        <View style={[styles.listView]}>
+                            <LinearGradient
+                                // Button Linear Gradient
+                                colors={["#3FAC4D", "#47c056", "#78C482"]}
+                                style={styles.awesomeIcon}
+                            >
+                                <AntDesign name="up" size={30} color={"white"}/>
+                            </LinearGradient>
 
-                    <DraggableFlatList
-                        data={incomeList.incomes}
-                        renderItem={renderItem}
-                        keyExtractor={(item, index) => `draggable-item-${item.id}`}
-                        onDragEnd={({data}) => setIncomeList({incomes: data})}
-                    />
-                </View>
-            </ScrollView>
-            <View style={{backgroundColor: 'transparent', marginBottom: 5, marginHorizontal: 20}}>
-                <LinearGradient
-                    // Button Linear Gradient
-                    colors={['#00CD00', 'rgba(0,205,0,0.55)']}
-                    style={{padding: 15, justifyContent: 'center', flexDirection: 'row', borderRadius: 8,marginBottom:5}}>
-                    <Text
-                        style={{
-                            backgroundColor: 'transparent',
-                            fontSize: 24,
-                            fontWeight: '700',
-                            color: '#fff',
-                        }}>
-                        Toplam Gelir =
-                    </Text>
-                    <Text style={{
-                        backgroundColor: 'transparent',
-                        fontSize: 24,
-                        fontWeight: '700',
-                        color: '#fff',
-                    }}> {total} ₺</Text>
-                </LinearGradient>
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    marginLeft: 20,
+                                    backgroundColor: "transparent",
+                                    flex: 1,
+                                }}
+                            >
+                                <View style={{backgroundColor: "transparent", flex: 2}}>
+                                    <Text style={[styles.listText]}>{data.item.incomeName}</Text>
+                                   {/* <Text style={[styles.listTextInner]}>Income</Text>*/}
+                                    <Text style={[styles.listTextInner]}>{t('On the')} <Text style={{fontWeight:'bold'}}>{data.item.date.split('-')[2]}</Text> {t('of every month')} </Text>
+                                    <Text style={[styles.listTextInner]}>{t('For')} <Text style={{fontWeight:'bold'}}>{data.item.period}</Text> {t('months')}</Text>
+                                </View>
+                                <Text style={[styles.listTextMoney, styles.flex1]}>
+                                    ₺{parseFloat(data.item.incomeAmount).toFixed(2)}
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+                    renderHiddenItem={(data, rowMap) => (
+                        <View style={styles.rowHidden}>
+                            <View style={styles.rowLeft}>
+                                <TouchableOpacity
+
+                                    //onPress={() => closeRow(rowMap, data.item.key)}
+                                >
+                                    <Text style={{color: 'white', fontSize: 15}}/>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.rowRight}>
+                                <TouchableOpacity
+                                    style={{width:'40%',flex:1,alignItems:'center',justifyContent:'center'}}
+                                    onPress={() => handleDeleteIncome(data.item.id)}
+                                >
+                                    <Text style={{color: 'white', fontSize: 18}}>{t('Delete')}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+                    leftOpenValue={0}
+                    rightOpenValue={-90}
+                />
+            </View>
+            <View
+                style={{
+                    width: '100%',
+                    height: 60,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "transparent",
+                    marginVertical:15
+                }}
+            >
+               <View style={{
+                   backgroundColor: "#3FAC4D",
+                   width: 60,
+                   height: 60,
+                   borderRadius: 25,
+                   alignItems: "center",
+                   justifyContent: "center",
+               }}>
+                   <TouchableOpacity onPress={()=>{
+                       navigation.navigate('AddIncomeScreen')
+                   }}>
+                       <IconView color="white" name="ios-add" sizeN={45}/>
+                   </TouchableOpacity>
+               </View>
             </View>
         </SafeAreaView>
-
     );
 }
 // You can explore the built-in icon families and icons on the web at:
 // https://icons.expo.fyi/
 function IconView(props: { name: string; color: string; sizeN: number }) {
-    return <Ionicons size={props.sizeN} style={{marginBottom: -3}} {...props} />;
+    return (
+        <Ionicons size={props.sizeN} style={{marginBottom: -3}} {...props} />
+    );
 }
 
-function FontAwesomeIconView(props: { name: string; color: string; sizeN: number }) {
-    return <FontAwesome5 name={props.name} size={props.sizeN} color={props.color}/>
+function FontAwesomeIconView(props: {
+    name: string;
+    color: string;
+    sizeN: number;
+}) {
+    return (
+        <FontAwesome5 name={props.name} size={props.sizeN} color={props.color}/>
+    );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-
+        backgroundColor: "white",
     },
     scrollView: {
         marginHorizontal: 20,
         marginTop: 15,
     },
     draggableList: {
-        marginHorizontal: 20,
+        marginHorizontal: 10,
         marginTop: 15,
-        backgroundColor: 'transparent',
-        flex:1
+        backgroundColor: "transparent",
+        flex: 1,
     },
     textInputView: {
         flex: 1,
         margin: 5,
-        backgroundColor: 'rgba(209,209,209,0.32)',
+        backgroundColor: "rgba(209,209,209,0.32)",
         borderRadius: 6,
         padding: 5,
-        height:40
+        height: 40,
     },
     listView: {
-        display: 'flex',
+        display: "flex",
         flex: 1,
-        flexDirection: 'row',
-        backgroundColor: 'rgba(227,227,227,0.33)',
+        flexDirection: "row",
+        backgroundColor: "#eff2f5",
         marginVertical: 4,
         borderRadius: 8,
-        alignItems: 'center',
+        alignItems: "center",
         padding: 5,
-        paddingLeft: 10
+        paddingLeft: 10,
+    },
+
+    itemActive: {
+        backgroundColor: "rgba(143,143,143,0.18)",
+        marginHorizontal: 10,
     },
     listText: {
         fontSize: 16,
-        fontWeight: '300',
-        flexWrap: 'wrap',
+        fontWeight: "300",
+        flexWrap: "wrap",
+        textAlign: "left",
+    },
+    listTextInner: {
+        fontSize: 13,
+        fontWeight: "200",
+        flexWrap: "wrap",
+        textAlign: "left",
+        fontFamily: "poppins-light",
+        paddingLeft: 5,
+    },
+    listTextMoney: {
+        fontSize: 14,
+        fontWeight: "300",
+        flexWrap: "wrap",
+        textAlign: "right",
+        paddingRight: 5
+    },
+    flex1: {
         flex: 1,
     },
+    flex2: {
+        flex: 2,
+    },
     awesomeIcon: {
-        backgroundColor: 'transparent'
+        borderRadius: 6,
+        width: 40,
+        height: 40,
+        alignItems: "center",
+        justifyContent: "center",
     },
     title: {
         fontSize: 20,
-        fontWeight: 'bold',
+        fontWeight: "bold",
     },
     separator: {
-        marginVertical: 10,
         height: 1,
-        width: '100%',
+        width: "100%",
     },
     linearGradient: {
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: "center",
+        justifyContent: "center",
         borderRadius: 5,
         height: 200,
         width: 350,
     },
+    rowHidden: {
+        display: "flex",
+        flex: 1,
+        flexDirection: "row",
+        backgroundColor: "transparent",
+        marginVertical: 4,
+        borderRadius: 8,
+        justifyContent: "space-between",
+        height:'100%'
+
+    },
+    rowLeft: {
+        flex: 1,
+        justifyContent: 'center',
+        backgroundColor: '#3FAC4D',
+        borderTopLeftRadius: 8,
+        borderBottomLeftRadius: 8,
+        paddingLeft: 8
+    },
+    rowRight: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+        backgroundColor: '#ff4141',
+        borderTopRightRadius: 8,
+        borderBottomRightRadius: 8,
+        paddingRight: 8
+    }
 });

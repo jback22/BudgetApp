@@ -27,7 +27,7 @@
     "description": "",
     "android": {
       "package": "com.jback.budgetapp",
-      "versionCode": 1
+      "versionCode": 2
     }
   }
 }

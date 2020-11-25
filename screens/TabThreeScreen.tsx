@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {
-    Alert,
+    Alert, Keyboard,
     SafeAreaView,
     ScrollView,
     StyleSheet,
@@ -25,7 +25,7 @@ export default function TabThreeScreen() {
     const [needName, setNeedName] = useState('');
     const [needAmount, setNeedAmount] = useState('');
     const [needUrl, setNeedUrl] = useState('');
-    const [needList, setNeedList] = useState<{ needs: { needName: string; needAmount: string; needUrl: string; id: number; }[]; }>({needs: []});
+    const [needList, setNeedList] = useState<{ needs: { needName: string; needAmount: string; needUrl: string; id: string; }[]; }>({needs: []});
 
     useEffect(() => {
         _retrieveData();
@@ -35,12 +35,18 @@ export default function TabThreeScreen() {
     }, [needList]);
     const handleNeedList = () => {
         if (!needName || !needAmount) return;
-        const arr = {needName: needName, needAmount: needAmount, id: needList.needs.length + 1, needUrl: needUrl};
+        const arr = {
+            needName: needName,
+            needAmount: needAmount,
+            id: '_' + Math.random().toString(36).substr(2, 9),
+            needUrl: needUrl
+        };
         const list = {needs: [...needList.needs, arr]};
         setNeedList(list);
         setNeedName('');
         setNeedAmount('');
         setNeedUrl('');
+        Keyboard.dismiss();
     };
     const _storeData = async () => {
         try {
@@ -65,10 +71,9 @@ export default function TabThreeScreen() {
             console.dir(error)
         }
     };
-    const handleDeleteNeed = (id: number) => {
+    const handleDeleteNeed = (id: string) => {
         /* comment */
         const list = needList.needs.filter(item => item.id !== id);
-        console.log(list);
         setNeedList({needs: list})
     };
     const renderItem = ({item, index, drag, isActive}: any) => {
@@ -76,7 +81,7 @@ export default function TabThreeScreen() {
             <TouchableOpacity
                 onPressIn={drag}
                 onLongPress={() => Alert.alert(
-                    "Gelir silinecek!",
+                    "İhtiyaç silinecek!",
                     "",
                     [
                         {
@@ -87,34 +92,31 @@ export default function TabThreeScreen() {
                     ],
                     {cancelable: false}
                 )}
+                delayPressIn={200}
             >
-                <View style={styles.listView}>
+                <View style={[isActive && styles.itemActive, styles.listView]}>
                     <View style={styles.awesomeIcon}>
                         <IconView name={"ios-basket"} color={'#E8B927'} sizeN={40}/>
                     </View>
                     <View style={{
-                        flexDirection: 'column',
-                        alignItems: 'flex-start',
-                        marginLeft: 20,
-                        backgroundColor: 'transparent'
+                        flex: 1,
+                        backgroundColor: 'transparent',
+                        flexDirection:'column',
+                        marginLeft:20,
                     }}>
                         <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            marginLeft: 10,
-                            backgroundColor: 'transparent'
+                            flex:1,
+                            flexDirection:'row',
+                            backgroundColor: 'transparent',
                         }}>
                             <Text style={styles.listText}>{item.needName}</Text>
                             <Text> = </Text>
                             <Text style={styles.listText}>{item.needAmount} ₺</Text>
                         </View>
                         <View style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            flex: 1,
-                            flexWrap: 'wrap',
-                            marginLeft: 10,
-                            backgroundColor: 'transparent'
+                            flex:1,
+                            backgroundColor: 'transparent',
+                            marginTop:5
                         }}>
                             <RNUrlPreview text={item.needUrl}/>
                         </View>
@@ -184,30 +186,29 @@ export default function TabThreeScreen() {
                 </View>
                 <View style={{
                     backgroundColor: '#F9C900',
-                    width: 30,
-                    height: 30,
+                    width: 40,
+                    height: 40,
                     margin: 5,
                     borderRadius: 10,
                     alignItems: 'center',
                     justifyContent: 'center'
                 }}>
                     <TouchableOpacity onPress={handleNeedList}>
-                        <IconView color="white" name="ios-add" sizeN={30}/>
+                        <IconView color="white" name="ios-add" sizeN={40}/>
                     </TouchableOpacity>
                 </View>
             </View>
             <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)"/>
-            <ScrollView>
-                <View style={styles.draggableList}>
+            <View style={styles.draggableList}>
 
-                    <DraggableFlatList
-                        data={needList.needs}
-                        renderItem={renderItem}
-                        keyExtractor={(item, index) => `draggable-item-${item.id}`}
-                        onDragEnd={({data}) => setNeedList({needs: data})}
-                    />
-                </View>
-            </ScrollView>
+                <DraggableFlatList
+                    data={needList.needs}
+                    renderItem={renderItem}
+                    keyExtractor={(item, index) => `draggable-item-${item.id}`}
+                    onDragEnd={({data}) => setNeedList({needs: data})}
+                    activationDistance={100}
+                />
+            </View>
         </SafeAreaView>
     );
 }
@@ -253,6 +254,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 5,
         paddingLeft: 10
+    },
+    itemActive: {
+        backgroundColor: 'rgba(143,143,143,0.18)',
+        marginHorizontal: 10,
     },
     listText: {
         fontSize: 18,
