@@ -1,10 +1,10 @@
 #BudgetApp
 * build with expo
 
-![Sample 1](./assets/images/image1.png )
-![Sample 2](./assets/images/image2.png )
-![Sample 3](./assets/images/image3.png )
-![Sample 4](./assets/images/image4.png )
+![Sample 1](https://github.com/mnolta/BudgetApp/issues/4)
+![Sample 2](https://github.com/mnolta/BudgetApp/issues/4)
+![Sample 3](https://github.com/mnolta/BudgetApp/issues/4)
+![Sample 4](https://github.com/mnolta/BudgetApp/issues/4)
 ## Download
 ### For Android Devices
 [Downlaod here](https://exp-shell-app-assets.s3.us-west-1.amazonaws.com/android/%40jback/BudgetApp-4483845d49fa482d99638d9e9ab8a963-signed.ap)  
