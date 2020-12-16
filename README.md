@@ -1,8 +1,10 @@
 #BudgetApp
 * build with expo
 
-![Sample 1](./assets/images/image2.jpg )
-![Sample 3](./assets/images/image1.jpg )
+![Sample 1](./assets/images/image1.jpg )
+![Sample 2](./assets/images/image2.jpg )
+![Sample 3](./assets/images/image3.jpg )
+![Sample 4](./assets/images/image4.jpg )
 ## Download
 ### For Android Devices
 [Downlaod here](https://exp-shell-app-assets.s3.us-west-1.amazonaws.com/android/%40jback/BudgetApp-4483845d49fa482d99638d9e9ab8a963-signed.ap)  
